@@ -1,4 +1,5 @@
 package com.agri.marketplace.AgriFair.security;
+
 import com.agri.marketplace.AgriFair.service.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -25,12 +26,13 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
+                .cors(Customizer.withDefaults())  // use CorsConfig
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                .userDetailsService(userDetailsService)
                 .httpBasic(Customizer.withDefaults());
+
         return http.build();
     }
 

@@ -24,13 +24,17 @@ public class AuthController {
         if(userService.findByUsername(request.getUsername()) != null){
             return ResponseEntity.badRequest().body("Username already exists");
         }
+
         User user = new User();
         user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail()); // set email
         user.setPassword(request.getPassword());
-        user.setRole(request.getRole()); // e.g., ROLE_FARMER or ROLE_CUSTOMER
+        user.setRole(request.getRole());
+
         User savedUser = userService.registerUser(user);
         return ResponseEntity.ok("User registered successfully");
     }
+
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody LoginRequest request) {
@@ -49,8 +53,10 @@ public class AuthController {
 @Data
 class UserRegistrationRequest {
     private String username;
+    private String email;
     private String password;
-    private String role;  // OPTIONALLY: ROLE_FARMER or ROLE_CUSTOMER
+    private String role;
+    // OPTIONALLY: ROLE_FARMER or ROLE_CUSTOMER
 }
 
 @Data
