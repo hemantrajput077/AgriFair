@@ -14,7 +14,12 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:5173") // React frontend
+                        .allowedOrigins(
+                            "http://localhost:5173",  // Vite default port
+                            "http://localhost:8081",  // Your current frontend port
+                            "http://localhost:8082",  // Alternative port
+                            "http://localhost:3000"   // Common React port
+                        )
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
