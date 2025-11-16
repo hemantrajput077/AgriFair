@@ -9,6 +9,7 @@ import com.agri.marketplace.AgriFair.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,7 +22,10 @@ public class CropService {
     @Autowired
     private UserRepository userRepository;
 
-    public CropResponseDto addCrop(Authentication auth, CropRequestDto cropDto) {
+    @Autowired
+    private FileStorageService fileStorageService;
+
+    public CropResponseDto addCrop(Authentication auth, CropRequestDto cropDto, MultipartFile imageFile) {
         User farmer = userRepository.findByUsername(auth.getName());
         Crop crop = new Crop();
         crop.setProductName(cropDto.getProductName());
@@ -29,7 +33,20 @@ public class CropService {
         crop.setPrice(cropDto.getPrice());
         crop.setQuantity(cropDto.getQuantity());
         crop.setOrganic(cropDto.isOrganic());
-        crop.setPhotoUrl(cropDto.getPhotoUrl());
+        
+        // Handle image upload
+        try {
+            if (imageFile != null && !imageFile.isEmpty()) {
+                String imageUrl = fileStorageService.storeFile(imageFile);
+                crop.setPhotoUrl(imageUrl);
+            } else if (cropDto.getPhotoUrl() != null && !cropDto.getPhotoUrl().isEmpty()) {
+                // Allow URL if no file uploaded
+                crop.setPhotoUrl(cropDto.getPhotoUrl());
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to store image: " + e.getMessage(), e);
+        }
+        
         crop.setFarmer(farmer);
         Crop saved = cropRepository.save(crop);
 
