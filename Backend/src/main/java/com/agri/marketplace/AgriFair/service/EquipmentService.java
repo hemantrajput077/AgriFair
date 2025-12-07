@@ -44,13 +44,27 @@ public class EquipmentService {
     }
 
     @Transactional
-    public Equipment createEquipment(Equipment equipment, MultipartFile imageFile) {
-        Long ownerId = Optional.ofNullable(equipment.getOwner())
-                .map(Farmer::getId)
-                .orElseThrow(() -> new IllegalArgumentException("Equipment owner is required"));
-
-        Farmer owner = farmerRepository.findById(ownerId)
-                .orElseThrow(() -> new EntityNotFoundException("Owner not found: " + ownerId));
+    public Equipment createEquipment(Equipment equipment, MultipartFile imageFile, String username) {
+        // Get farmer by username (auto-assign owner from logged-in user)
+        Farmer owner;
+        if (username != null && !username.isEmpty()) {
+            // Find User by username, then find Farmer by matching email
+            com.agri.marketplace.AgriFair.model.User user = 
+                com.agri.marketplace.AgriFair.repository.UserRepository.findByUsername(username);
+            if (user == null) {
+                throw new EntityNotFoundException("User not found: " + username);
+            }
+            owner = farmerRepository.findByEmail(user.getEmail())
+                .orElseThrow(() -> new EntityNotFoundException(
+                    "Farmer profile not found for user: " + username + ". Please complete your farmer profile."));
+        } else {
+            // Fallback: use owner from equipment if provided (for backward compatibility)
+            Long ownerId = Optional.ofNullable(equipment.getOwner())
+                    .map(Farmer::getId)
+                    .orElseThrow(() -> new IllegalArgumentException("Equipment owner is required"));
+            owner = farmerRepository.findById(ownerId)
+                    .orElseThrow(() -> new EntityNotFoundException("Owner not found: " + ownerId));
+        }
 
         equipment.setOwner(owner);
         if (equipment.getAvailable() == null) {

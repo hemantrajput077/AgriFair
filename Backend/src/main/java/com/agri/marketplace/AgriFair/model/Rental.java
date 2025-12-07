@@ -52,7 +52,7 @@ public class Rental {
     @Column(nullable = false)
     private LocalDate endDate;
 
-    @Enumerated(EnumType.STRING)
+    @Enumerated(EnumType.STRING) // describe how the Enum store in DB
     @Column(nullable = false)
     private RentalStatus status = RentalStatus.PENDING;
 

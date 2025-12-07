@@ -57,6 +57,9 @@ public class Farmer {
     @Column(nullable = false)
     private String localArea;
 
+    @Column(unique = true)
+    private Long userId; // Link to User entity via email matching
+
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Equipment> ownedEquipment;

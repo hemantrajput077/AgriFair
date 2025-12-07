@@ -64,7 +64,7 @@ public class AuthController {
         user.setRole(role);
 
         try {
-            User savedUser = userService.registerUser(user);
+            User savedUser = userService.registerUser(user); // res.User encrypt the pass and insert password and default role customer if not mentioned
             return ResponseEntity.ok("User registered successfully");
         } catch (DataIntegrityViolationException e) {
             // catches DB unique constraint violations as a fallback

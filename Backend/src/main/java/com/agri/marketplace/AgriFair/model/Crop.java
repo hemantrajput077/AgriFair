@@ -29,7 +29,7 @@ public class Crop {
     private String photoUrl;
 
     @ManyToOne
-    @JoinColumn(name = "farmer_id")
+    @JoinColumn(name = "farmer_id") 
     private User farmer;
 }
 
