@@ -52,10 +52,10 @@ public class Rental {
     @Column(nullable = false)
     private LocalDate endDate;
 
-    @Enumerated(EnumType.STRING) // describe how the Enum store in DB
-    @Column(nullable = false)
+    @Enumerated(EnumType.STRING) // store enum name as String
+    @Column(nullable = false, length = 50) // ensure DB column is wide enough
     private RentalStatus status = RentalStatus.PENDING;
-
+    
     @PositiveOrZero
     @Column(nullable = false)
     private Double totalCost;

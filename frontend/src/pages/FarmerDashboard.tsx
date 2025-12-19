@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { apiService } from "@/services/api";
 import { cropApi, Crop } from "@/services/cropApi";
+import Navbar from "@/components/Navbar";
 
 const FarmerDashboard = () => {
   const [newCrop, setNewCrop] = useState({
@@ -104,8 +105,9 @@ const FarmerDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+      <Navbar />
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-white shadow-sm border-b pt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-3">

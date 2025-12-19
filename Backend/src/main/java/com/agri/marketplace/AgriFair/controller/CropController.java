@@ -24,10 +24,13 @@ public class CropController {
     public ResponseEntity<?> addCrop(
             @RequestPart("crop") CropRequestDto cropDto,
             @RequestPart(value = "image", required = false) MultipartFile imageFile,
-            Authentication auth) {
+            org.springframework.security.core.Authentication auth) {
         try {
             if (cropDto == null) {
                 return ResponseEntity.badRequest().body("Crop data is required");
+            }
+            if (auth == null) {
+                return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).body("Authentication required");
             }
             
             return ResponseEntity.ok(cropService.addCrop(auth, cropDto, imageFile));
@@ -39,7 +42,10 @@ public class CropController {
 
     @PreAuthorize("hasRole('ROLE_FARMER')")
     @GetMapping("/my")
-    public ResponseEntity<List<CropResponseDto>> getMyCrops(Authentication auth) {
+    public ResponseEntity<List<CropResponseDto>> getMyCrops(org.springframework.security.core.Authentication auth) {
+        if (auth == null) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        }
         return ResponseEntity.ok(cropService.getCropsByFarmer(auth));
     }
 

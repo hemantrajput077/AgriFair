@@ -1,24 +1,33 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sprout, User } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { apiService, RegisterRequest } from "@/services/api";
 
 const Signup = () => {
+  const [searchParams] = useSearchParams();
+  const roleParam = searchParams.get("role");
+  
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     password: "",
     confirmPassword: "",
-    role: "",
+    role: roleParam || "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (roleParam) {
+      setFormData(prev => ({ ...prev, role: roleParam }));
+    }
+  }, [roleParam]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

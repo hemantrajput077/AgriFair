@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { rentalApi, Equipment, Farmer } from "@/services/rentalApi";
+import { rentalApi, Equipment } from "@/services/rentalApi";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar } from "lucide-react";
+import { Calendar, ArrowLeft } from "lucide-react";
+import Navbar from "@/components/Navbar";
 
 const CreateRental = () => {
   const navigate = useNavigate();
@@ -19,16 +20,10 @@ const CreateRental = () => {
 
   const equipmentIdParam = searchParams.get("equipmentId");
 
-  const [selectedFarmerId, setSelectedFarmerId] = useState<string>("");
   const [selectedEquipmentId, setSelectedEquipmentId] = useState<string>(equipmentIdParam || "");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [notes, setNotes] = useState("");
-
-  const { data: farmers = [] } = useQuery({
-    queryKey: ["farmers"],
-    queryFn: () => rentalApi.getFarmers(),
-  });
 
   const { data: equipments = [] } = useQuery({
     queryKey: ["equipments"],
@@ -73,7 +68,7 @@ const CreateRental = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedFarmerId || !selectedEquipmentId || !startDate || !endDate) {
+    if (!selectedEquipmentId || !startDate || !endDate) {
       toast({
         title: "Validation Error",
         description: "Please fill in all required fields",
@@ -94,8 +89,8 @@ const CreateRental = () => {
       return;
     }
 
+    // Renter will be auto-assigned from logged-in user on backend
     createRentalMutation.mutate({
-      renter: { id: parseInt(selectedFarmerId) },
       equipment: { id: parseInt(selectedEquipmentId) },
       startDate,
       endDate,
@@ -104,28 +99,28 @@ const CreateRental = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-2xl">
-      <Card>
+    <div className="min-h-screen">
+      <Navbar />
+      <div className="container mx-auto p-6 pt-24 max-w-2xl">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/equipment")}
+          className="mb-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Equipment
+        </Button>
+        <Card>
         <CardHeader>
           <CardTitle>Create Rental Request</CardTitle>
           <CardDescription>Request to rent equipment from farmers</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="farmer">Renter (Farmer) *</Label>
-              <Select value={selectedFarmerId} onValueChange={setSelectedFarmerId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a farmer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {farmers.map((farmer) => (
-                    <SelectItem key={farmer.id} value={farmer.id.toString()}>
-                      {farmer.firstName} {farmer.secondName} - {farmer.email}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="bg-blue-50 p-4 rounded-md">
+              <p className="text-sm text-blue-800">
+                <strong>Note:</strong> This rental request will be created under your account automatically.
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -219,6 +214,7 @@ const CreateRental = () => {
           </form>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };

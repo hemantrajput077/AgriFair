@@ -57,7 +57,9 @@ public class EquipmentController {
                 return ResponseEntity.badRequest().body("Equipment data is required");
             }
             
-            Equipment created = equipmentService.createEquipment(equipment, imageFile);
+            // Auto-assign owner from logged-in user
+            String username = auth.getName();
+            Equipment created = equipmentService.createEquipment(equipment, imageFile, username);
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (EntityNotFoundException | IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());

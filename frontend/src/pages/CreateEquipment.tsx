@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { rentalApi, Farmer } from "@/services/rentalApi";
+import { rentalApi } from "@/services/rentalApi";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import Navbar from "@/components/Navbar";
 
 const CreateEquipment = () => {
   const navigate = useNavigate();
@@ -20,15 +20,9 @@ const CreateEquipment = () => {
     model: "",
     rate: "",
     available: true,
-    ownerId: "",
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-
-  const { data: farmers = [] } = useQuery({
-    queryKey: ["farmers"],
-    queryFn: () => rentalApi.getFarmers(),
-  });
 
   const createEquipmentMutation = useMutation({
     mutationFn: (data: {
@@ -67,7 +61,7 @@ const CreateEquipment = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!equipmentData.ownerId || !equipmentData.type || !equipmentData.model || !equipmentData.rate) {
+    if (!equipmentData.type || !equipmentData.model || !equipmentData.rate) {
       toast({
         title: "Validation Error",
         description: "Please fill in all required fields",
@@ -76,12 +70,12 @@ const CreateEquipment = () => {
       return;
     }
 
+    // Owner will be auto-assigned from logged-in user on backend
     const equipment = {
       type: equipmentData.type,
       model: equipmentData.model,
       rate: parseInt(equipmentData.rate),
       available: equipmentData.available,
-      owner: { id: parseInt(equipmentData.ownerId) },
     };
 
     createEquipmentMutation.mutate({
@@ -91,40 +85,29 @@ const CreateEquipment = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-2xl">
-      <Button
-        variant="ghost"
-        onClick={() => navigate("/equipment")}
-        className="mb-4"
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Equipment
-      </Button>
+    <div className="min-h-screen">
+      <Navbar />
+      <div className="container mx-auto p-6 pt-24 max-w-2xl">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/equipment")}
+          className="mb-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Equipment
+        </Button>
 
-      <Card>
+        <Card>
         <CardHeader>
           <CardTitle>Add Equipment for Rent</CardTitle>
           <CardDescription>List your equipment so others can rent it</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="owner">Owner (Farmer) *</Label>
-              <Select
-                value={equipmentData.ownerId}
-                onValueChange={(value) => setEquipmentData({ ...equipmentData, ownerId: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select owner" />
-                </SelectTrigger>
-                <SelectContent>
-                  {farmers.map((farmer) => (
-                    <SelectItem key={farmer.id} value={farmer.id.toString()}>
-                      {farmer.firstName} {farmer.secondName} - {farmer.email}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="bg-blue-50 p-4 rounded-md">
+              <p className="text-sm text-blue-800">
+                <strong>Note:</strong> This equipment will be registered under your account automatically.
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -203,6 +186,7 @@ const CreateEquipment = () => {
           </form>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };

@@ -20,17 +20,20 @@ import java.util.List;
 public class RentalService {
 
     private static final List<RentalStatus> ACTIVE_STATUSES =
-            List.copyOf(EnumSet.of(RentalStatus.PENDING, RentalStatus.APPROVED, RentalStatus.ACTIVE));
+            List.copyOf(EnumSet.of(RentalStatus.PENDING, RentalStatus.APPROVED, RentalStatus.PAID, RentalStatus.ACTIVE));
 
     private final RentalRepository rentalRepository;
     private final FarmerRepository farmerRepository;
+    private final FarmerService farmerService;
     private final EquipmentRepository equipmentRepository;
 
     public RentalService(RentalRepository rentalRepository,
                          FarmerRepository farmerRepository,
+                         FarmerService farmerService,
                          EquipmentRepository equipmentRepository) {
         this.rentalRepository = rentalRepository;
         this.farmerRepository = farmerRepository;
+        this.farmerService = farmerService;
         this.equipmentRepository = equipmentRepository;
     }
 
@@ -51,8 +54,24 @@ public class RentalService {
         return rentalRepository.findByEquipmentId(equipmentId);
     }
 
+    /**
+     * Get rentals where the logged-in farmer is the renter
+     */
+    public List<Rental> getRentalsByRenter(String username) {
+        Farmer renter = farmerService.getFarmerByUsername(username);
+        return rentalRepository.findByRenterId(renter.getId());
+    }
+
+    /**
+     * Get rentals for equipment owned by the logged-in farmer
+     */
+    public List<Rental> getRentalsForMyEquipment(String username) {
+        Farmer owner = farmerService.getFarmerByUsername(username);
+        return rentalRepository.findByEquipmentOwnerId(owner.getId());
+    }
+
     @Transactional
-    public Rental createRental(Rental rental) {
+    public Rental createRental(Rental rental, String username) {
         LocalDate start = rental.getStartDate();
         LocalDate end = rental.getEndDate();
 
@@ -60,8 +79,18 @@ public class RentalService {
             throw new IllegalArgumentException("Invalid rental period");
         }
 
-        Farmer renter = farmerRepository.findById(rental.getRenter().getId())
-                .orElseThrow(() -> new EntityNotFoundException("Renter not found: " + rental.getRenter().getId()));
+        // Auto-assign renter from logged-in user
+        Farmer renter;
+        if (username != null && !username.isEmpty()) {
+            renter = farmerService.getFarmerByUsername(username);
+        } else {
+            // Fallback: use renter from rental if provided
+            if (rental.getRenter() == null || rental.getRenter().getId() == null) {
+                throw new IllegalArgumentException("Renter is required. Please ensure you are logged in.");
+            }
+            renter = farmerRepository.findById(rental.getRenter().getId())
+                    .orElseThrow(() -> new EntityNotFoundException("Renter not found: " + rental.getRenter().getId()));
+        }
 
         Equipment equipment = equipmentRepository.findById(rental.getEquipment().getId())
                 .orElseThrow(() -> new EntityNotFoundException("Equipment not found: " + rental.getEquipment().getId()));
@@ -84,8 +113,15 @@ public class RentalService {
     }
 
     @Transactional
-    public Rental approveRental(Long rentalId) {
+    public Rental approveRental(Long rentalId, String username) {
         Rental rental = getRentalById(rentalId);
+        
+        // Authorization: Only equipment owner can approve
+        Farmer owner = farmerService.getFarmerByUsername(username);
+        if (!rental.getEquipment().getOwner().getId().equals(owner.getId())) {
+            throw new IllegalStateException("Only equipment owner can approve rental requests");
+        }
+        
         if (rental.getStatus() != RentalStatus.PENDING) {
             throw new IllegalStateException("Only pending rentals can be approved");
         }
@@ -104,10 +140,35 @@ public class RentalService {
     }
 
     @Transactional
-    public Rental startRental(Long rentalId) {
+    public Rental confirmPayment(Long rentalId, String username) {
         Rental rental = getRentalById(rentalId);
+        
+        // Authorization: Only renter can confirm payment
+        Farmer renter = farmerService.getFarmerByUsername(username);
+        if (!rental.getRenter().getId().equals(renter.getId())) {
+            throw new IllegalStateException("Only renter can confirm payment");
+        }
+        
         if (rental.getStatus() != RentalStatus.APPROVED) {
-            throw new IllegalStateException("Only approved rentals can be started");
+            throw new IllegalStateException("Only approved rentals can have payment confirmed");
+        }
+
+        rental.setStatus(RentalStatus.PAID);
+        return rentalRepository.save(rental);
+    }
+
+    @Transactional
+    public Rental startRental(Long rentalId, String username) {
+        Rental rental = getRentalById(rentalId);
+        
+        // Authorization: Only renter can start rental
+        Farmer renter = farmerService.getFarmerByUsername(username);
+        if (!rental.getRenter().getId().equals(renter.getId())) {
+            throw new IllegalStateException("Only renter can start rental");
+        }
+        
+        if (rental.getStatus() != RentalStatus.PAID && rental.getStatus() != RentalStatus.APPROVED) {
+            throw new IllegalStateException("Only paid or approved rentals can be started");
         }
         if (LocalDate.now().isBefore(rental.getStartDate())) {
             throw new IllegalStateException("Rental start date has not arrived yet");
@@ -118,8 +179,15 @@ public class RentalService {
     }
 
     @Transactional
-    public Rental completeRental(Long rentalId) {
+    public Rental completeRental(Long rentalId, String username) {
         Rental rental = getRentalById(rentalId);
+        
+        // Authorization: Only renter can complete rental
+        Farmer renter = farmerService.getFarmerByUsername(username);
+        if (!rental.getRenter().getId().equals(renter.getId())) {
+            throw new IllegalStateException("Only renter can complete rental");
+        }
+        
         if (rental.getStatus() != RentalStatus.ACTIVE) {
             throw new IllegalStateException("Only active rentals can be completed");
         }
@@ -131,13 +199,23 @@ public class RentalService {
     }
 
     @Transactional
-    public Rental cancelRental(Long rentalId) {
+    public Rental cancelRental(Long rentalId, String username) {
         Rental rental = getRentalById(rentalId);
+        
+        // Authorization: Either renter or equipment owner can cancel
+        Farmer farmer = farmerService.getFarmerByUsername(username);
+        boolean isRenter = rental.getRenter().getId().equals(farmer.getId());
+        boolean isOwner = rental.getEquipment().getOwner().getId().equals(farmer.getId());
+        
+        if (!isRenter && !isOwner) {
+            throw new IllegalStateException("Only renter or equipment owner can cancel rental");
+        }
+        
         if (rental.getStatus() == RentalStatus.COMPLETED) {
             throw new IllegalStateException("Completed rentals cannot be cancelled");
         }
 
-        if (rental.getStatus() == RentalStatus.APPROVED || rental.getStatus() == RentalStatus.ACTIVE) {
+        if (rental.getStatus() == RentalStatus.APPROVED || rental.getStatus() == RentalStatus.PAID || rental.getStatus() == RentalStatus.ACTIVE) {
             rental.getEquipment().setAvailable(Boolean.TRUE);
             equipmentRepository.save(rental.getEquipment());
         }

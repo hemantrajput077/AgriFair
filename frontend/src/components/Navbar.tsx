@@ -17,13 +17,13 @@ const Navbar = () => {
       setIsAuthenticated(authenticated);
       
       if (authenticated) {
-        // In a real app, you'd decode the JWT token to get user info
-        // For now, we'll check localStorage or make an API call
-        const token = apiService.getAuthToken();
-        if (token) {
-          // Mock role detection - in real app, decode JWT
-          setUserRole("ROLE_FARMER"); // or "ROLE_CUSTOMER"
+        // Get role from localStorage (set during login)
+        const role = localStorage.getItem('userRole');
+        if (role) {
+          setUserRole(role);
         }
+      } else {
+        setUserRole("");
       }
     };
 
@@ -31,11 +31,18 @@ const Navbar = () => {
     
     // Listen for auth changes
     window.addEventListener('storage', checkAuth);
-    return () => window.removeEventListener('storage', checkAuth);
+    // Also check on focus (in case login happened in another tab)
+    window.addEventListener('focus', checkAuth);
+    return () => {
+      window.removeEventListener('storage', checkAuth);
+      window.removeEventListener('focus', checkAuth);
+    };
   }, []);
 
   const handleLogout = () => {
     apiService.removeAuthToken();
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('username');
     setIsAuthenticated(false);
     setUserRole("");
     navigate('/');
@@ -75,6 +82,9 @@ const Navbar = () => {
             <Link to="/" className="text-foreground hover:text-primary transition-colors font-medium">
               Home
             </Link>
+            <Link to="/crops" className="text-foreground hover:text-primary transition-colors font-medium">
+              Crops
+            </Link>
             <Link to="/equipment" className="text-foreground hover:text-primary transition-colors font-medium">
               Equipment
             </Link>
@@ -93,6 +103,14 @@ const Navbar = () => {
           <div className="flex items-center gap-3">
             {isAuthenticated ? (
               <>
+                {userRole === "ROLE_FARMER" && (
+                  <Link to="/farmer-profile">
+                    <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                      <User className="w-4 h-4" />
+                      Profile
+                    </Button>
+                  </Link>
+                )}
                 <Link to={getDashboardLink()}>
                   <Button variant="outline" size="sm" className="flex items-center gap-2">
                     <User className="w-4 h-4" />

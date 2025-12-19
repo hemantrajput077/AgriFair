@@ -5,6 +5,8 @@ import com.agri.marketplace.AgriFair.service.RentalService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -49,20 +51,58 @@ public class RentalController {
         return rentalService.getRentalsByEquipment(equipmentId);
     }
 
+    @PreAuthorize("hasRole('ROLE_FARMER')")
     @PostMapping
-    public ResponseEntity<?> createRental(@RequestBody Rental rental) {
+    public ResponseEntity<?> createRental(@RequestBody Rental rental, Authentication auth) {
         try {
-            Rental created = rentalService.createRental(rental);
+            if (auth == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
+            }
+            String username = auth.getName();
+            Rental created = rentalService.createRental(rental, username);
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (EntityNotFoundException | IllegalArgumentException | IllegalStateException ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_FARMER')")
+    @GetMapping("/my-requests")
+    public ResponseEntity<?> getMyRentalRequests(Authentication auth) {
+        try {
+            if (auth == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
+            }
+            String username = auth.getName();
+            return ResponseEntity.ok(rentalService.getRentalsByRenter(username));
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @PreAuthorize("hasRole('ROLE_FARMER')")
+    @GetMapping("/my-equipment")
+    public ResponseEntity<?> getRentalsForMyEquipment(Authentication auth) {
+        try {
+            if (auth == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
+            }
+            String username = auth.getName();
+            return ResponseEntity.ok(rentalService.getRentalsForMyEquipment(username));
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @PreAuthorize("hasRole('ROLE_FARMER')")
     @PutMapping("/{id}/approve")
-    public ResponseEntity<?> approveRental(@PathVariable Long id) {
+    public ResponseEntity<?> approveRental(@PathVariable Long id, Authentication auth) {
         try {
-            return ResponseEntity.ok(rentalService.approveRental(id));
+            if (auth == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
+            }
+            String username = auth.getName();
+            return ResponseEntity.ok(rentalService.approveRental(id, username));
         } catch (EntityNotFoundException ex) {
             return ResponseEntity.notFound().build();
         } catch (IllegalStateException ex) {
@@ -70,10 +110,31 @@ public class RentalController {
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_FARMER')")
+    @PutMapping("/{id}/confirm-payment")
+    public ResponseEntity<?> confirmPayment(@PathVariable Long id, Authentication auth) {
+        try {
+            if (auth == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
+            }
+            String username = auth.getName();
+            return ResponseEntity.ok(rentalService.confirmPayment(id, username));
+        } catch (EntityNotFoundException ex) {
+            return ResponseEntity.notFound().build();
+        } catch (IllegalStateException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @PreAuthorize("hasRole('ROLE_FARMER')")
     @PutMapping("/{id}/start")
-    public ResponseEntity<?> startRental(@PathVariable Long id) {
+    public ResponseEntity<?> startRental(@PathVariable Long id, Authentication auth) {
         try {
-            return ResponseEntity.ok(rentalService.startRental(id));
+            if (auth == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
+            }
+            String username = auth.getName();
+            return ResponseEntity.ok(rentalService.startRental(id, username));
         } catch (EntityNotFoundException ex) {
             return ResponseEntity.notFound().build();
         } catch (IllegalStateException ex) {
@@ -81,10 +142,15 @@ public class RentalController {
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_FARMER')")
     @PutMapping("/{id}/complete")
-    public ResponseEntity<?> completeRental(@PathVariable Long id) {
+    public ResponseEntity<?> completeRental(@PathVariable Long id, Authentication auth) {
         try {
-            return ResponseEntity.ok(rentalService.completeRental(id));
+            if (auth == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
+            }
+            String username = auth.getName();
+            return ResponseEntity.ok(rentalService.completeRental(id, username));
         } catch (EntityNotFoundException ex) {
             return ResponseEntity.notFound().build();
         } catch (IllegalStateException ex) {
@@ -92,10 +158,15 @@ public class RentalController {
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_FARMER')")
     @PutMapping("/{id}/cancel")
-    public ResponseEntity<?> cancelRental(@PathVariable Long id) {
+    public ResponseEntity<?> cancelRental(@PathVariable Long id, Authentication auth) {
         try {
-            return ResponseEntity.ok(rentalService.cancelRental(id));
+            if (auth == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
+            }
+            String username = auth.getName();
+            return ResponseEntity.ok(rentalService.cancelRental(id, username));
         } catch (EntityNotFoundException ex) {
             return ResponseEntity.notFound().build();
         } catch (IllegalStateException ex) {

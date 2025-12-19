@@ -26,7 +26,7 @@ export interface Rental {
   equipment: Equipment;
   startDate: string;
   endDate: string;
-  status: 'PENDING' | 'APPROVED' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
+  status: 'PENDING' | 'APPROVED' | 'PAID' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
   totalCost: number;
   notes?: string;
 }
@@ -84,6 +84,17 @@ class RentalApiService {
     });
   }
 
+  async getMyFarmerProfile(): Promise<Farmer> {
+    return this.request<Farmer>('/farmers/my-profile');
+  }
+
+  async updateMyFarmerProfile(farmer: Partial<Farmer>): Promise<Farmer> {
+    return this.request<Farmer>('/farmers/my-profile', {
+      method: 'PUT',
+      body: JSON.stringify(farmer),
+    });
+  }
+
   // Equipment endpoints
   async getEquipments(): Promise<Equipment[]> {
     return this.request<Equipment[]>('/equipments');
@@ -101,7 +112,7 @@ class RentalApiService {
     return this.request<Equipment[]>(`/equipments/owner/${ownerId}`);
   }
 
-  async createEquipment(equipment: Omit<Equipment, 'id' | 'owner'> & { owner: { id: number } }, imageFile?: File): Promise<Equipment> {
+  async createEquipment(equipment: Omit<Equipment, 'id' | 'owner'>, imageFile?: File): Promise<Equipment> {
     const token = this.getAuthToken();
     if (!token) {
       throw new Error('Authentication required. Please log in first.');
@@ -161,8 +172,15 @@ class RentalApiService {
     return this.request<Rental[]>(`/rentals/equipment/${equipmentId}`);
   }
 
+  async getMyRentalRequests(): Promise<Rental[]> {
+    return this.request<Rental[]>('/rentals/my-requests');
+  }
+
+  async getRentalsForMyEquipment(): Promise<Rental[]> {
+    return this.request<Rental[]>('/rentals/my-equipment');
+  }
+
   async createRental(rental: {
-    renter: { id: number };
     equipment: { id: number };
     startDate: string;
     endDate: string;
@@ -176,6 +194,12 @@ class RentalApiService {
 
   async approveRental(id: number): Promise<Rental> {
     return this.request<Rental>(`/rentals/${id}/approve`, {
+      method: 'PUT',
+    });
+  }
+
+  async confirmPayment(id: number): Promise<Rental> {
+    return this.request<Rental>(`/rentals/${id}/confirm-payment`, {
       method: 'PUT',
     });
   }

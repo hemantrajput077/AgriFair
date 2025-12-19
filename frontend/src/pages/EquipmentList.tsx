@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { rentalApi, Equipment } from "@/services/rentalApi";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, DollarSign, User, MapPin } from "lucide-react";
+import { DollarSign, User, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import Navbar from "@/components/Navbar";
 
 const EquipmentList = () => {
   const navigate = useNavigate();
@@ -43,7 +44,9 @@ const EquipmentList = () => {
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="min-h-screen">
+      <Navbar />
+      <div className="container mx-auto p-6 pt-24">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Equipment for Rent</h1>
         <div className="flex gap-4">
@@ -124,6 +127,7 @@ const EquipmentList = () => {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 };

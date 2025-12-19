@@ -17,13 +17,16 @@ public class EquipmentService {
 
     private final EquipmentRepository equipmentRepository;
     private final FarmerRepository farmerRepository;
+    private final FarmerService farmerService;
     private final FileStorageService fileStorageService;
 
     public EquipmentService(EquipmentRepository equipmentRepository, 
                            FarmerRepository farmerRepository,
+                           FarmerService farmerService,
                            FileStorageService fileStorageService) {
         this.equipmentRepository = equipmentRepository;
         this.farmerRepository = farmerRepository;
+        this.farmerService = farmerService;
         this.fileStorageService = fileStorageService;
     }
 
@@ -48,15 +51,8 @@ public class EquipmentService {
         // Get farmer by username (auto-assign owner from logged-in user)
         Farmer owner;
         if (username != null && !username.isEmpty()) {
-            // Find User by username, then find Farmer by matching email
-            com.agri.marketplace.AgriFair.model.User user = 
-                com.agri.marketplace.AgriFair.repository.UserRepository.findByUsername(username);
-            if (user == null) {
-                throw new EntityNotFoundException("User not found: " + username);
-            }
-            owner = farmerRepository.findByEmail(user.getEmail())
-                .orElseThrow(() -> new EntityNotFoundException(
-                    "Farmer profile not found for user: " + username + ". Please complete your farmer profile."));
+            // Use FarmerService to get farmer by username
+            owner = farmerService.getFarmerByUsername(username);
         } else {
             // Fallback: use owner from equipment if provided (for backward compatibility)
             Long ownerId = Optional.ofNullable(equipment.getOwner())

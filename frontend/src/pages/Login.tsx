@@ -28,8 +28,10 @@ const Login = () => {
 
       const response = await apiService.login(loginData);
       
-      // Store the token
+      // Store the token and role
       apiService.setAuthToken(response.token);
+      localStorage.setItem('userRole', response.role);
+      localStorage.setItem('username', response.username);
       
       toast({
         title: "Welcome back!",

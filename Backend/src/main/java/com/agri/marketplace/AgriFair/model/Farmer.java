@@ -35,27 +35,23 @@ public class Farmer {
     @Column(nullable = false)
     private String firstName;
 
-    @NotBlank
     @Column(nullable = false)
-    private String secondName;
+    private String secondName = "";
 
     @Email
     @NotBlank
     @Column(nullable = false, unique = true)
     private String email;
 
-    @NotBlank
     @Pattern(regexp = "^[+]?[0-9\\-]{7,15}$", message = "Invalid phone number")
-    @Column(nullable = false, unique = true)
-    private String phoneNo;
+    @Column(unique = true, nullable = false)
+    private String phoneNo = "+91-0000000000"; // Default placeholder
 
-    @NotBlank
     @Column(nullable = false)
-    private String county;
+    private String county = "Not Set";
 
-    @NotBlank
     @Column(nullable = false)
-    private String localArea;
+    private String localArea = "Not Set";
 
     @Column(unique = true)
     private Long userId; // Link to User entity via email matching

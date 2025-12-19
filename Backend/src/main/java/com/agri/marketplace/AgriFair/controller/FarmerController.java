@@ -6,12 +6,9 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -43,6 +40,35 @@ public class FarmerController {
     public ResponseEntity<Farmer> createFarmer(@Valid @RequestBody Farmer farmer) {
         Farmer created = farmerService.createFarmer(farmer);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @PreAuthorize("hasRole('ROLE_FARMER')")
+    @GetMapping("/my-profile")
+    public ResponseEntity<?> getMyProfile(Authentication auth) {
+        try {
+            if (auth == null || auth.getName() == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required.");
+            }
+            String username = auth.getName();
+            return ResponseEntity.ok(farmerService.getMyFarmerProfile(username));
+        } catch (EntityNotFoundException | IllegalStateException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @PreAuthorize("hasRole('ROLE_FARMER')")
+    @PutMapping("/my-profile")
+    public ResponseEntity<?> updateMyProfile(@RequestBody Farmer updatedFarmer, Authentication auth) {
+        try {
+            if (auth == null || auth.getName() == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required.");
+            }
+            String username = auth.getName();
+            Farmer updated = farmerService.updateFarmerProfile(username, updatedFarmer);
+            return ResponseEntity.ok(updated);
+        } catch (EntityNotFoundException | IllegalStateException | IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
     }
 }
 

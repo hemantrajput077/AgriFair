@@ -54,8 +54,8 @@ const FeaturesSection = () => {
               >
                 <div className="p-8 space-y-4">
                   {/* Icon with gradient background */}
-                  <div className={`w-16 h-16 rounded-xl ${feature.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className="w-8 h-8 text-white" />
+                  <div className={`w-16 h-16 rounded-xl ${feature.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
+                    <Icon className="w-8 h-8 text-white drop-shadow-md" />
                   </div>
 
                   {/* Title */}

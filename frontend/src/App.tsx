@@ -15,6 +15,8 @@ import EquipmentList from "./pages/EquipmentList";
 import CreateRental from "./pages/CreateRental";
 import MyRentals from "./pages/MyRentals";
 import CreateEquipment from "./pages/CreateEquipment";
+import CropList from "./pages/CropList";
+import FarmerProfile from "./pages/FarmerProfile";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +43,8 @@ const App = () => (
           <Route path="/create-equipment" element={<CreateEquipment />} />
           <Route path="/create-rental" element={<CreateRental />} />
           <Route path="/my-rentals" element={<MyRentals />} />
+          <Route path="/crops" element={<CropList />} />
+          <Route path="/farmer-profile" element={<FarmerProfile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
