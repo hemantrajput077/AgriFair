@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Mail, Phone, MapPin, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Footer from "@/components/Footer";
+import Navbar from "@/components/Navbar";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -27,6 +28,7 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Navbar />
       {/* Header Section */}
       <section className="bg-gradient-hero text-white py-20 px-4">
         <div className="container mx-auto text-center animate-fade-in-up">

@@ -10,10 +10,12 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { useToast } from "@/hooks/use-toast";
 import { apiService } from "@/services/api";
+import { useCart } from "@/context/CartContext";
 
 const CropList = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { addToCart, getTotalItems } = useCart();
   const [searchTerm, setSearchTerm] = useState("");
   const isAuthenticated = apiService.isAuthenticated();
 
@@ -38,8 +40,12 @@ const CropList = () => {
       navigate('/login');
       return;
     }
-    // Redirect to customer dashboard where cart functionality exists
-    navigate('/customer-dashboard');
+
+    addToCart(crop, 1);
+    toast({
+      title: "Added to cart",
+      description: `${crop.productName} has been added to your cart`,
+    });
   };
 
   if (isLoading) {
@@ -81,9 +87,12 @@ const CropList = () => {
               />
             </div>
             {isAuthenticated && (
-              <Button onClick={() => navigate('/customer-dashboard')} variant="outline">
+              <Button onClick={() => navigate('/cart')} variant="outline" className="relative">
                 <ShoppingCart className="h-4 w-4 mr-2" />
-                Go to Cart
+                View Cart
+                {getTotalItems() > 0 && (
+                  <Badge className="ml-2 bg-red-500">{getTotalItems()}</Badge>
+                )}
               </Button>
             )}
           </div>

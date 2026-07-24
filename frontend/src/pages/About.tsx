@@ -1,10 +1,12 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Sprout, Users, TrendingUp, Heart, Target, Eye } from "lucide-react";
 import Footer from "@/components/Footer";
+import Navbar from "@/components/Navbar";
 
 const About = () => {
   return (
     <div className="min-h-screen bg-background">
+      <Navbar />
       {/* Hero Section */}
       <section className="bg-gradient-hero text-white py-20 px-4">
         <div className="container mx-auto text-center animate-fade-in-up">
