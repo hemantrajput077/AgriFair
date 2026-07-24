@@ -18,7 +18,7 @@ const features = [
     icon: Wrench,
     title: "Tool & Land Renting",
     description: "Rent tractors, irrigation systems, or farmland. Modern farming equipment at affordable rates for better productivity.",
-    color: "bg-gradient-accent",
+    color: "bg-gradient-hero",
   },
   {
     icon: Sparkles,
