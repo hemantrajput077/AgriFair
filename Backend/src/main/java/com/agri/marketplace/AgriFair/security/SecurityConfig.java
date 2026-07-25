@@ -46,6 +46,7 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/health").permitAll() // Health check endpoint
                         .requestMatchers("/api/crops").permitAll() // Public browsing of crops
                         .requestMatchers("/api/equipment").permitAll() // Public browsing of equipment
                         .requestMatchers("/uploads/**").permitAll() // Allow access to uploaded files
