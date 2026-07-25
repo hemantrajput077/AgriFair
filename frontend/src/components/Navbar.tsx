@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button";
-import { LogOut, User, Home, ShoppingBag, Tractor, Package } from "lucide-react";
+import { LogOut, User, Home, ShoppingBag, Tractor, Package, Settings } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { apiService } from "@/services/api";
+import { profileApi } from "@/services/profileApi";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -21,6 +23,14 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Fetch profile data to get profile image
+  const { data: profile, refetch: refetchProfile } = useQuery({
+    queryKey: ['navbarProfile'],
+    queryFn: () => profileApi.getMyProfile(),
+    enabled: apiService.isAuthenticated(),
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+
   useEffect(() => {
     const checkAuth = () => {
       const authenticated = apiService.isAuthenticated();
@@ -36,6 +46,8 @@ const Navbar = () => {
         if (user) {
           setUsername(user);
         }
+        // Refetch profile when auth state changes
+        refetchProfile();
       } else {
         setUserRole("");
         setUsername("");
@@ -52,7 +64,7 @@ const Navbar = () => {
       window.removeEventListener('storage', checkAuth);
       window.removeEventListener('focus', checkAuth);
     };
-  }, []);
+  }, [refetchProfile]);
 
   const handleLogout = () => {
     apiService.removeAuthToken();
@@ -149,10 +161,13 @@ const Navbar = () => {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="flex items-center gap-2 hover:bg-accent">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${username}`} />
+                        <AvatarImage
+                          src={profile?.profileImage ? `http://localhost:8080${profile.profileImage}` : `https://api.dicebear.com/7.x/initials/svg?seed=${username}`}
+                          alt={username}
+                        />
                         <AvatarFallback>{getUserInitials(username)}</AvatarFallback>
                       </Avatar>
-                      <span className="hidden md:inline font-medium">{username}</span>
+                      <span className="hidden md:inline font-medium">{profile?.fullName || username}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
@@ -164,11 +179,17 @@ const Navbar = () => {
                         <span>Dashboard</span>
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile/edit" className="flex items-center gap-2 cursor-pointer">
+                        <Settings className="w-4 h-4" />
+                        <span>Edit Profile</span>
+                      </Link>
+                    </DropdownMenuItem>
                     {userRole === "ROLE_FARMER" && (
                       <DropdownMenuItem asChild>
                         <Link to="/farmer-profile" className="flex items-center gap-2 cursor-pointer">
                           <User className="w-4 h-4" />
-                          <span>Profile</span>
+                          <span>View Profile</span>
                         </Link>
                       </DropdownMenuItem>
                     )}
